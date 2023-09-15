@@ -13,8 +13,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import path from 'path';
 import { bloginterface } from 'src/models/user.interface';
 import { UsersService } from 'src/users/services/users/users.service';
+import { uuid } from 'uuidv4';
 
 @Controller('blogs')
 @ApiConsumes('multipart/form-data')
@@ -28,27 +30,22 @@ export class UsersController {
     FileInterceptor('image', {
       storage: diskStorage({
         destination: './files',
-        filename: (req, image, callback) => {
-          const uniqueSuffix = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          const ext = extname(image.originalname);
-          const filename = `${uniqueSuffix}${ext}`;
-          callback(null, filename);
+        filename: (req, file, callback) => {
+          const unique:string = path.parse(file.originalname).name.replace(/\s/g,'')+uuid();
+          const extension:string = path.parse(file.originalname).ext;
+          const filename = `${unique}${extension}`
+          callback(null,filename);
         },
       }),
     }),
   )
   @ApiBody({ type: bloginterface })
-  createBlog(
+  async createBlog(
     @Body() blog: bloginterface,
     @UploadedFile() image: Express.Multer.File,
   ): Promise<bloginterface> {
-    
-    console.log(image.path);
-    blog.image = `${this.SERVER_URL}${image.path}`;
-    return this.blogService.createBlog(blog);
+    blog.image = image.filename;
+    return await this.blogService.createBlog(blog);
   }
 
   @Get('list/:id')
@@ -89,6 +86,7 @@ export class UsersController {
 
   //     return 'file uploaded';
   //   }
+  
 
   @Patch(':id')
   @ApiConsumes('multipart/form-data')

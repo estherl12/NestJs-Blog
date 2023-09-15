@@ -18,7 +18,6 @@ export class UsersService {
   ) {}
 
   createBlog(blog: bloginterface): Promise<bloginterface> {
-    
     return this.blogRepository.save(blog);
   }
 
@@ -34,7 +33,9 @@ export class UsersService {
     return this.blogRepository.delete(id);
   }
 
-  updateOne(id: number, blog: bloginterface): Promise<any> {
+  async updateOne(id: number, blog: bloginterface): Promise<any> {
+    const resultwithCount = await this.blogRepository.findAndCount();
+
     return this.blogRepository.update(id, blog);
   }
 }
